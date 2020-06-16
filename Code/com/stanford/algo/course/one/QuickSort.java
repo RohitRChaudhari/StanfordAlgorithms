@@ -23,7 +23,7 @@ public class QuickSort {
     }
 
     private static void testStanford() {
-        final int[] a = getArrayFromFile("resources/QuickSort.txt");
+        final int[] a = getArrayFromFile("Code/resources/QuickSort.txt");
         test(a);
     }
 
@@ -119,5 +119,8 @@ public class QuickSort {
         count += (right - left);
         return positionOfPivotInSortedArray - 1;
     }
+
+
+
 
 }
