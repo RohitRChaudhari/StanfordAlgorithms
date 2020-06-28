@@ -22,17 +22,16 @@ import java.util.Random;
 public class MinCut {
     private static final Random rand = new Random();
     private static final int TWO = 2;        // Need to loop over the graph until there are only 2 vertices remain.
-
+    static HashMap<Integer, ArrayList<Integer>> adjList = new HashMap<>();
+    static ArrayList<Integer> vertices = new ArrayList<>();
 
     // constructs n - 1 graphs and performs the min cut algorithm
     public static void main(String[] arg) throws IOException {
         MinCut mc = new MinCut();
-        HashMap<Integer, ArrayList<Integer>> adjList = new HashMap<>();
-        ArrayList<Integer> vertices = new ArrayList<>();
         Utils.constructGraph(adjList, vertices);
         int absoluteMinimum = adjList.size() * adjList.size();
         for (int i = 0; i < adjList.size(); i++) {
-            absoluteMinimum = Math.min(absoluteMinimum, mc.minCut(adjList, vertices));
+            absoluteMinimum = Math.min(absoluteMinimum, mc.minCut());
             adjList.clear();
             vertices.clear();
             Utils.constructGraph(adjList, vertices);
@@ -40,17 +39,15 @@ public class MinCut {
         System.out.println("\n MINIMAL CUT FOUND IS \n" + absoluteMinimum);
     }
 
-    public int minCut(HashMap<Integer, ArrayList<Integer>> adjList,
-                      ArrayList<Integer> vertices) {
-
+    public int minCut() {
         int label = getUniqueLabel(adjList.size());
         while (vertices.size() > TWO) {
             MC MC = new MC(adjList, vertices).getRandomEdge();
-            mergeVertices(adjList, MC);
-            removeB(adjList, vertices, MC.B);
-            updateBothVertexWithNewLabel(adjList, vertices, label, MC.A, MC.B);
-            updateALabel(adjList, vertices, label, MC.A);
-            removeSelfLoops(adjList, label);
+            mergeVertices(MC);
+            removeB(MC.B);
+            updateBothVertexWithNewLabel(label, MC.A, MC.B);
+            updateALabel(label, MC.A);
+            removeSelfLoops(label);
             label = getUniqueLabel(label);
         }
         return adjList.get(vertices.get(0)).size();
@@ -61,16 +58,16 @@ public class MinCut {
         return ++label;
     }
 
-    private void mergeVertices(final HashMap<Integer, ArrayList<Integer>> adjList, final MC MC) {
+    private void mergeVertices(final MC MC) {
         adjList.get(MC.A).addAll(adjList.get(MC.B));
     }
 
-    private void removeB(final HashMap<Integer, ArrayList<Integer>> adjList, final ArrayList<Integer> vertices, final int B) {
+    private void removeB(final int B) {
         vertices.remove(vertices.indexOf(B));
         adjList.remove(B);
     }
 
-    private void updateBothVertexWithNewLabel(final HashMap<Integer, ArrayList<Integer>> adjList, final ArrayList<Integer> vertices, final int label, final int A, final int B) {
+    private void updateBothVertexWithNewLabel(final int label, final int A, final int B) {
         // Give a new label to vertex1 and change all the labels of
         // of vertex1 or vertex2 to the new label
         for (Integer vertex : vertices) {
@@ -82,7 +79,7 @@ public class MinCut {
         }
     }
 
-    private void updateALabel(final HashMap<Integer, ArrayList<Integer>> adjList, final ArrayList<Integer> vertices, final int label, final int A) {
+    private void updateALabel(final int label, final int A) {
         // Change the label of the key node vertex1 in the adjList
         ArrayList<Integer> values = adjList.get(A);
         adjList.remove(A);
@@ -92,19 +89,18 @@ public class MinCut {
     }
 
     /**
-     * @param adjList
-     * @param label   Remove self loops by looping over the element of the new label
-     *                and by deleting all edges outgoing to its own label.
+     * @param label Remove self loops by looping over the element of the new label
+     *              and by deleting all edges outgoing to its own label.
      */
-    private void removeSelfLoops(final HashMap<Integer, ArrayList<Integer>> adjList, final int label) {
+    private void removeSelfLoops(final int label) {
         adjList.get(label).removeIf(vertex -> vertex == label);
     }
 
-    public int getNoOfEdges(HashMap<Integer, ArrayList<Integer>> adjList, ArrayList<Integer> vertices) {
+    public int getNoOfEdges() {
         return vertices.stream().mapToInt(vertex -> adjList.get(vertex).size()).sum();
     }
 
-    public int[][] getEdges(int noOfEdges, HashMap<Integer, ArrayList<Integer>> adjList, ArrayList<Integer> vertices) {
+    public int[][] getEdges(int noOfEdges) {
         int k = 0;
         int[][] edges = new int[noOfEdges][2];
         for (Integer src : vertices) {
@@ -121,10 +117,10 @@ public class MinCut {
      * chosen from Graph named as A and B as in the lecture
      */
     private class MC {
-        private final HashMap<Integer, ArrayList<Integer>> adjList;
-        private final ArrayList<Integer> vertices;
         public int A;
         public int B;
+        private HashMap<Integer, ArrayList<Integer>> adjList;
+        private ArrayList<Integer> vertices;
 
         public MC(final HashMap<Integer, ArrayList<Integer>> adjList, final ArrayList<Integer> vertices) {
             this.adjList = adjList;
@@ -132,8 +128,8 @@ public class MinCut {
         }
 
         public MC getRandomEdge() {
-            int noOfEdges = getNoOfEdges(adjList, vertices);
-            int[][] edges = getEdges(noOfEdges, adjList, vertices);
+            int noOfEdges = getNoOfEdges();
+            int[][] edges = getEdges(noOfEdges);
             int no = rand.nextInt(edges.length);
             A = edges[no][0];
             B = edges[no][1];
